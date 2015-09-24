@@ -29,7 +29,7 @@ commandString = !
 # listen to, and which users to consider admins / ignored.
 #
 
-commands = commands.txt
-channels = channels.txt
-admins = admins.txt
-ignore = ignore.txt
+commands = config/commands.conf
+channels = config/channels.conf
+admins = config/admins.conf
+ignore = config/ignore.conf

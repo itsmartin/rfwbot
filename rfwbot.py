@@ -273,7 +273,7 @@ class DiscordBot:
 		
 
 
-rfwbot = DiscordBot('rfwbot.ini')
+rfwbot = DiscordBot('config/rfwbot.conf')
 client = rfwbot.connect();
 
 @client.event
