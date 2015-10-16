@@ -63,6 +63,9 @@ When a user issues a command, the bot will respond with the *response* defined i
 - `%ROLL%` - treats the additional input as a series of die definitions (e.g. d20 = a twenty-sided die; 2d6 = two six-sided dice) and
 returns the outcome of rolling those dice.
  - Note: if the additional input contains malformed dice definitions, the entire response will be replaced with an error message.
+- `%XKCD%` - the additional input is assumed to be the number of an XKCD comic; this macro is replaced with a link to the comic, and
+its title.
+- `%RANDOM_XKCD%` - as `%XKCD%`, but a random comic is selected.
 
 ## Feedback and issues
 
