@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import discord, configparser, random, re
+import discord, configparser, random, re, requests
 
 class InvalidDieException(Exception):
 	def __init__(self, die):
@@ -204,6 +204,13 @@ class DiscordBot:
 			except InvalidDieException as e:
 				response = str(e)
 
+		if "%XKCD%" in response:
+			response = response.replace("%XKCD%", self.getXkcd(params))
+
+		if "%RANDOM_XKCD%" in response:
+			response = response.replace("%RANDOM_XKCD%", self.getRandomXkcd())
+
+
 		self.say(channel, response)
 
 
@@ -231,6 +238,30 @@ class DiscordBot:
 				rolls.append(random.randint(1,sides))
 
 		return " + ".join(str(n) for n in rolls) + (" = " + str(sum(rolls)) if len(rolls) > 1 else '')
+
+
+	def getXkcd(self,number):
+		try:
+			r = requests.get("http://xkcd.com/{}/info.0.json".format(number))
+		except:
+			return "Sorry, I couldn't reach XKCD"
+
+		try:
+			title = r.json()['safe_title']
+		except:
+			return("Comic {} not found".format(number))
+
+		return("http://xkcd.com/{} (\"{}\")".format(number, title))
+
+
+	def getRandomXkcd(self):
+		try:
+			r = requests.get("http://xkcd.com/info.0.json")
+			latest = r.json()['num']
+		except:
+			return "Sorry, I couldn't reach XKCD"
+
+		return self.getXkcd(random.randint(1, latest))
 
 		
 	def handleSystemCommand(self, channel, message, sender):
