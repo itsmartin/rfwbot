@@ -287,11 +287,11 @@ class DiscordBot:
 			self.say(channel, 'Shutting down.')
 			self.client.logout()
 		if cmd == 'channels':
-			r = ''
+			self.say(channel, 'Channel list:')
 			for s in self.client.servers:
-				r += "Server: {}\n".format(s.name)
+				self.say(channel, 'Server: {}\n'.format(s.name))
 				for c in s.channels:
-					r += "-- {} [{}] (id: {})\n".format(
+					r = "-- {} [{}] (id: {})\n".format(
 						c.name, c.type, c.id
 					)
 					if c.id in self.commandGroups:
@@ -300,7 +300,7 @@ class DiscordBot:
 						)
 					else:
 						r += "---- (Channel not monitored)\n"
-			self.say(channel, r)
+					self.say(channel, r)
 		
 
 
