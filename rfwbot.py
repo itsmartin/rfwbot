@@ -293,16 +293,17 @@ class DiscordBot:
 			for s in self.client.servers:
 				self.say(channel, 'Server: {}\n'.format(s.name))
 				for c in s.channels:
-					r = "-- {} [{}] (id: {})\n".format(
-						c.name, c.type, c.id
-					)
-					if c.id in self.commandGroups:
-						r += "---- In groups: {}\n".format(
-							', '.join(self.commandGroups[c.id])
+					if c.type == 'text':
+						r = "-- {} (id: {})\n".format(
+							c.name, c.id
 						)
-					else:
-						r += "---- (Channel not monitored)\n"
-					self.say(channel, r)
+						if c.id in self.commandGroups:
+							r += "---- In groups: {}\n".format(
+								', '.join(self.commandGroups[c.id])
+							)
+						else:
+							r += "---- (Channel not monitored)\n"
+						self.say(channel, r)
 		
 
 
