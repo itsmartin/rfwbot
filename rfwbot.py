@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import discord, configparser, random, re, requests
+from time import sleep
 
 class InvalidDieException(Exception):
 	def __init__(self, die):
@@ -128,6 +129,7 @@ class DiscordBot:
 
 	def say(self, channel, message):
 		self.client.send_message(channel, message)
+		sleep(1)
 
 
 	def handleCommand(self, channel, message, sender):
