@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import discord, configparser, random, re, requests
+import discord, configparser, random, re, requests, asyncio
 from time import sleep
 
 class InvalidDieException(Exception):
@@ -10,8 +10,9 @@ class InvalidDieException(Exception):
 
 
 class DiscordBot:
-	def __init__(self, configFile):
+	def __init__(self, configFile, client):
 		self._loadConfig(configFile)
+		self.client = client
 		self.cReload()
 
 	def _loadConfig(self, configFile):
@@ -109,16 +110,6 @@ class DiscordBot:
 		print('Logged in as {}'.format(user.name))
 		self.user = user
 
-
-	def connect(self):
-		self.client = discord.Client()
-		self.client.login(
-			self.config['authentication']['username'],
-			self.config['authentication']['password']
-		)
-		return self.client
-
-
 	def isAdmin(self, user):
 		return user.id in self.admins
 
@@ -127,11 +118,13 @@ class DiscordBot:
 		return (user.id in self.ignore or user == self.user)
 		
 
+	@asyncio.coroutine
 	def say(self, channel, message):
-		self.client.send_message(channel, message)
+		yield from self.client.send_message(channel, message)
 		sleep(1)
 
 
+	@asyncio.coroutine
 	def handleCommand(self, channel, message, sender):
 		# Are we listening in this channel?
 		if channel.id not in self.commandGroups:
@@ -139,7 +132,7 @@ class DiscordBot:
 		
 		# Get the list of commandGroups for this channel
 		commandGroups = self.commandGroups[channel.id]
-		
+
 		# Working backwards from the end of the string, remove
 		# words until a command is found
 		cmd = message.strip()
@@ -157,7 +150,8 @@ class DiscordBot:
 			params = spl[1] + ' ' + params
 
 		if rawResponse != False:
-			self.processCommandResponse(channel, rawResponse, sender, params.strip())
+			response = self.processCommandResponse(channel, rawResponse, sender, params.strip())
+			yield from self.say(channel, response)
 		
 
 	def getRawCommandResponse(self, commandGroups, cmd, params):
@@ -212,8 +206,7 @@ class DiscordBot:
 		if "%RANDOM_XKCD%" in response:
 			response = response.replace("%RANDOM_XKCD%", self.getRandomXkcd())
 
-
-		self.say(channel, response)
+		return response
 
 
 	def diceRoll(self, dice):
@@ -265,7 +258,7 @@ class DiscordBot:
 
 		return self.getXkcd(random.randint(1, latest))
 
-		
+	@asyncio.coroutine
 	def handleSystemCommand(self, channel, message, sender):
 		if not channel.is_private: return
 		
@@ -275,7 +268,7 @@ class DiscordBot:
 		# General commands
 
 		if cmd == 'whoami':
-			self.say(channel, 'Your name is {} and your id is {}'
+			yield from self.say(channel, 'Your name is {} and your id is {}'
 				.format(sender.name, sender.id))
 
 		# Admin commands
@@ -284,33 +277,35 @@ class DiscordBot:
 
 		if cmd == 'reload':
 			self.cReload()
-			self.say(channel, 'Reloaded!')
+			yield from self.say(channel, 'Reloaded!')
 		if cmd == 'stop':
-			self.say(channel, 'Shutting down.')
-			self.client.logout()
+			yield from self.say(channel, 'Shutting down.')
+			yield from self.client.logout()
 		if cmd == 'channels':
-			self.say(channel, 'Channel list:')
+			response = "Here are the channels I can currently see, and the responsegroups they are in:\n"
 			for s in self.client.servers:
-				self.say(channel, 'Server: {}\n'.format(s.name))
+				response += '\nOn the "{}" server:\n'.format(s.name)
 				for c in s.channels:
-					if c.type == 'text':
-						r = "-- {} (id: {})\n".format(
+					if c.type == discord.ChannelType.text:
+						response += "-- #{} ({})".format(
 							c.name, c.id
 						)
 						if c.id in self.commandGroups:
-							r += "---- In groups: {}\n".format(
+							response += " - in groups {}\n".format(
 								', '.join(self.commandGroups[c.id])
 							)
 						else:
-							r += "---- (Channel not monitored)\n"
-						self.say(channel, r)
+							response += " - not monitored\n"
+			yield from self.say(channel, response)
 		
 
 
-rfwbot = DiscordBot('config/rfwbot.conf')
-client = rfwbot.connect();
+client = discord.Client()
+rfwbot = DiscordBot('config/rfwbot.conf', client)
+
 
 @client.event
+@asyncio.coroutine
 def on_message(message):
 	if not rfwbot.isIgnored(message.author):
 		if message.content.startswith(rfwbot.commandString):
@@ -318,14 +313,15 @@ def on_message(message):
 			if command.startswith(rfwbot.commandString):
 				# System commands start with !!
 				command = command[len(rfwbot.commandString):]
-				rfwbot.handleSystemCommand(message.channel, command, message.author)
+				yield from rfwbot.handleSystemCommand(message.channel, command, message.author)
 			else:
-				rfwbot.handleCommand(message.channel, command, message.author)
+				yield from rfwbot.handleCommand(message.channel, command, message.author)
 
 @client.event
+@asyncio.coroutine
 def on_ready():
 	rfwbot.handleLogin(client.user)
 
 
+client.run(rfwbot.config['authentication']['token'])
 
-client.run()
