@@ -1,7 +1,0 @@
-[[basics]]
-me *	%SENDER% %INPUT%
-choose *	I choose %CHOICE%
-haha	%SENDER% smiled
-ping everyone	BROADCASTING ON ALL CHANNELS
-roll *	%SENDER% rolled %INPUT% for a result of %ROLL%
-roll	Please specify the dice to roll

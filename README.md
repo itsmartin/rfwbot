@@ -1,73 +1,69 @@
 # RFWbot
 
-This is a basic autoresponder bot for [Discord](https://discordapp.com), based on 
-[discord.py](https://github.com/Rapptz/discord.py). Right now its functionality is very limited. It can:
+This is a basic autoresponder bot for [Discord](https://discordapp.com), powered by [discord.py](https://github.com/Rapptz/discord.py). It can:
 
-- Read in a list of 'commands' and predefined responses from a file
-- Listen in channels and respond when those commands are typed by other users
-- Primitive 'macro-like' functionality to replace certain strings in its responses
+- Listen in the channels you specify, and respond to 'commands' with predefined responses
+- Ignore users
+- Perform basic 'macro-like' string replacements, to incorporate dynamic content into its responses
+  - A few basic macros are provided, and more can be added via a simple plugin architecture
 
 ## Installation
 
-1. Make sure your system has discord.py and Python 3.x set up.
-2. Configure your bot by editing the contents of `rfwbot.ini` and the various `.txt` files (see the samples provided).
-3. Run the script with `python3 rfwbot.py`.
+Install discord.py and requests:
 
-You may find it useful to wrap your script call in a small shell script to ensure that it restarts if it crashes for
-any reason. For example, I use this bash script:
+    pip install -r requirements.txt
 
-```
-#!/bin/bash
-while true; do
-        python3 rfwbot.py
-        echo Crashed, restarting
-        sleep 1
-done
-```
+Create a config file in JSON format (see `config.sample.json`)
+
+Run the bot with
+
+    python -m rfwbot config-file
+
+* `config-file` is the the path to your JSON config.
+
+You may find it useful to wrap your script call in a small shell script to ensure that it restarts if it crashes for any reason.
+
+### Running in a container
+
+You can use the supplied `Dockerfile` to create a docker image for the package, if you prefer.
+
+To build the image:
+
+    docker build --tag rfwbot .
+
+The image can then be run with the following:
+
+    docker run -d --name rfwbot -v ./config.json:/etc/rfwbot.json --restart=on-failure rfwbot 
+
+(Replace `./config.json` with the path to your config file).
 
 ## Configuration
 
-The main file in which the bot's responses are listed is called `commands.txt` by default. This file is formatted
-as follows:
-
-```
-[[channel-group-name]]
-command [tab] response
-command [tab] response
-...
-```
-
-The `channel-group-name` is an arbitrary string name you can give to a group of channels. This is so that you can configure
-your bot to respond to a different set of commands in different channels it joins. (You set up the channel/group mappings
-in `channels.txt`). You can define many different channel groups in your `commands.txt` file.
-
-On every subsequent line, you should give a *command* and *response* separated by a single TAB character.
+The JSON configuration file format is not currently documented, but hopefully it is fairly self-explanatory. See `config.sample.json` for an example.
 
 ### Commands
 
-Commands are listed without their prefix (normally `!`, but configurable in `rfwbot.ini`). They can include spaces. If a command
-ends with an asterisk (on its own, as a single word), then it will accept user input (which can be included in the bot's response
-through the use of the `%INPUT%` macro - see below).
+Commands are listed without their prefix (normally `!`, but configurable). They can include spaces.
 
-If you want, you can define two different versions of a command, one with user input and one without. See the **roll** command in
-`commands.txt.sample` for an example of this.
+* If a command ends with an asterisk (`*`), then it will require user input (which can be used in macros).
+* If a command does not end with an asterisk (`*`), then it will only be matched if there is no user input
+* You can define two different versions of a command, one with user input and one without. (See the **roll** command in the sample config for an example of this).
 
-### Response macros
+### Macros
 
-When a user issues a command, the bot will respond with the *response* defined in `commands.txt`. Responses can include the following
-'macros' which will be replaced accordingly:
+Responses can include 'macros' which are defined via simple plugin scripts in the `macros/` directory. A plugin is just a python script which defines a `run_macro` function. Have a look at the macros provided to see how they work.
 
-- `%SENDER%` - replaced with the public name of the user who issued the command
+### Included macros
+
+- `%SENDER%` - the public name of the user who issued the command
 - `%INPUT%` - the sender’s additional input (everything after the command)
-- `%CHOICE%` - one item, randomly chosen from the additional input (which is assumed to be comma-separated)
+- `%CHOICE%` - randomly chooses an option from the sender's additional input (comma-separated list of options)
 - `%ROLL%` - treats the additional input as a series of die definitions (e.g. d20 = a twenty-sided die; 2d6 = two six-sided dice) and
 returns the outcome of rolling those dice.
- - Note: if the additional input contains malformed dice definitions, the entire response will be replaced with an error message.
-- `%XKCD%` - the additional input is assumed to be the number of an XKCD comic; this macro is replaced with a link to the comic, and
-its title.
-- `%RANDOM_XKCD%` - as `%XKCD%`, but a random comic is selected.
+  - Note: if the additional input contains malformed dice definitions, the entire response will be replaced with an error message.
+- `%XKCD%` - returns a link to an XKCD comic, and its title. If additional input is provided, this is assumed to be the comic number; if not, a random comic is returned.
+- `%WIKI%` - searches English Wikipedia for the provided string and returns a link to the first result.
 
 ## Feedback and issues
 
 Please use the [GitHub issue tracker](https://github.com/itsmartin/rfwbot/issues) to report any bugs or suggest new features.
-

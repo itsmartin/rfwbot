@@ -1,0 +1,46 @@
+{
+    "settings": {
+        "command_prefix": "!",
+        "token": "your discord token"
+    },
+    "permissions": {
+        "admin": [
+            1234567890
+        ],
+        "ignored": [
+            9876543210
+        ]
+    },
+    "channels": {
+        "utils": [
+            1234567890,
+            9876543210
+        ],
+        "quotes": [
+            6789012345
+        ]
+    },
+    "commands": {
+        "utils": {
+            "me*": ["%SENDER% %INPUT%"],
+            "xkcd*": ["Relevant XKCD: %XKCD%"],
+            "xkcd": ["%XKCD%"],
+            "wiki*": ["%WIKI%"],
+            "choose*": ["I choose %CHOICE%"],
+            "roll": ["Please specify the dice to roll"],
+            "roll*": ["%SENDER% rolled %INPUT% for a result of %ROLL%"],
+            "cointoss": [
+                "Heads!",
+                "Tails"
+            ]
+        },
+        "quotes": {
+            "quote": [
+                "Don't worry about what anybody else is going to do. The best way to predict the future is to invent it. -- Alan Kay",
+                "Premature optimization is the root of all evil (or at least most of it) in programming. -- Donald Knuth",
+                "Lisp has jokingly been called \"the most intelligent way to misuse a computer\". I think that description is a great compliment because it transmits the full flavor of liberation: it has assisted a number of our most gifted fellow humans in thinking previously impossible thoughts. -- Edsger Dijkstra, CACM, 15:10",
+                "Keep away from people who try to belittle your ambitions. Small people always do that, but the really great make you feel that you, too, can become great. -- Mark Twain"
+            ]
+        }
+    }
+}
